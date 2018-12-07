@@ -119,6 +119,7 @@ paths:
     get:
       tags:
         - Check Ins
+      summary: Get check-in details
       operationId: getCheckIn
       security:
         - OAuth2:
