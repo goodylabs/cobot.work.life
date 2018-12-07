@@ -346,7 +346,7 @@ definitions:
             description: the checkin start time - possible to check a user in in the past (optional)
       relationships:
         type: object
-        sdditionalProperties: false
+        additionalProperties: false
         properties:
           space:
             type: object
