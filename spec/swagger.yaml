@@ -161,7 +161,7 @@ paths:
       tags:
         - Check Ins
       summary: Check In a member
-      descripition: |
+      description: |
         Check a member in into a given space
       operationId: checkIn
       parameters:
@@ -169,15 +169,6 @@ paths:
           in: body
           schema:
             $ref: '#/definitions/checkin_requests'
-          examples:
-              data:
-                attributes:
-                  token: 'optional RFID TOKEN'
-                  login: 'optional login'
-                  password: 'optional password'
-                  start: 2018-12-07T12:09:51Z
-
-
 
 
 
@@ -339,6 +330,15 @@ definitions:
             type: string
             example: Optional RFID token
             description: used if membershipId is not present (optional)
+          login:
+            type: string
+            example: Optional login
+            description: used if membershipId is not present (optional)
+          password:
+            type: string
+            example: Optional password
+            description: used if membershipId is not present (optional)
+
           start:
             type: string
             format: date-time
