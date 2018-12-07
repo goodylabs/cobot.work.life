@@ -54,14 +54,6 @@ tags:
   - name: Check Ins
     description: Checkin Operations
 securityDefinitions:
-  main_auth: # security definition name (you can name it as you want)
-    type: oauth2 # authorization type, one of: oauth2, basic, apiKey
-    # the following options are specific to oauth2 type
-    authorizationUrl: 'http://example.com/api/oauth/dialog'
-    flow: implicit
-    scopes:
-      'read:users': read users info
-      'write:users': modify or remove users
   OAuth2: # security definition name (you can name it as you want)
     type: oauth2 # authorization type, one of: oauth2, basic, apiKey
     # the following options are specific to oauth2 type
@@ -69,50 +61,29 @@ securityDefinitions:
     flow: implicit
     scopes:
       read_checkins: read checkin for a membership
+      checkins: perform chckins
 
-  api_key: # security definition name (you can name it as you want)
-    type: apiKey
-    # The following options are specific to apiKey type
-    in: header # Where API key will be passed: header or query
-    name: api_key # API key paramteer name
-  basic_auth: # security definition name (you can name it as you want)
-    type: basic
 
 # Holds the relative paths to the individual endpoints. The path is appended to the
 # basePath in order to construct the full URL.
 paths:
 
-  '/check_ins':
+  '/check_ins/':
     post:
       tags:
         - Check Ins
       summary: Check In with credentials
       description: |
         checkin with a check in token or login / password
+      operationId: checkInWithCreds
+      security:
+        - OAuth2:
+          - checkins
       parameters:
-
-    get:
-      tags:
-        - Check Ins
-
-
-  '/memberships/{membershipId}/check_ins/current':
-    parameters:
-      - name: mebershipId
-        in: path
-        description: 'The id of the membership the checkins belong to.'
-        required: true
-        type: string
-      - name: stop
-        in: query
-        type: string
-        format: date-time
-        description: 'Optional end time - possible to check a member out in the past'
-    delete:
-      tags:
-        - Check Ins
-      summary: Check out a member
-      operationId: checkOut
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/checkin_requests'
       responses:
         200:
           description: Success
@@ -143,14 +114,113 @@ paths:
         403:
           description: Forbidden
         404:
-          descripton: Member not found
+          description: Not found
+
+  '/check_ins/{checkinId}':
+    get:
+      tags:
+        - Check Ins
+      operationId: getCheckIn
+      security:
+        - OAuth2:
+          - checkins
+      parameters:
+        - name: checkinId
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/checkins'
+          examples:
+            application/vnd.api+json:
+              data:
+                id: a8c12f62ac8df98d29de357180d673e1
+                type: checkins
+                attributes:
+                  start: 2018-12-06T10:00:00Z
+                  stop: 2018-12-06T11:00:00Z
+                relationships:
+                  memberhip:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: memberships
+                  space:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: spaces
+                  time_pass:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: time_passes
+
+        403:
+          description: Forbidden
+        404:
+          description: Not found
+
+
+
+  '/memberships/{membershipId}/check_ins/current':
+    parameters:
+      - name: membershipId
+        in: path
+        description: 'The id of the membership the checkins belong to.'
+        required: true
+        type: string
+      - name: stop
+        in: query
+        type: string
+        format: date-time
+        description: 'Optional end time - possible to check a member out in the past'
+    delete:
+      tags:
+        - Check Ins
+      summary: Check out a member
+      operationId: checkOut
+      security:
+        - OAuth2:
+          - read_checkins
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/checkins'
+          examples:
+            application/vnd.api+json:
+              data:
+                id: a8c12f62ac8df98d29de357180d673e1
+                type: checkins
+                attributes:
+                  start: 2018-12-06T10:00:00Z
+                  stop: 2018-12-06T11:00:00Z
+                relationships:
+                  memberhip:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: memberships
+                  space:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: spaces
+                  time_pass:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: time_passes
+
+        403:
+          description: Forbidden
+        404:
+          description: Member not found
 
 
 
   '/memberships/{membershipId}/check_ins':
 
     parameters:
-      - name: mebershipId
+      - name: membershipId
         in: path
         description: 'The id of the membership the checkins belong to.'
         required: true
@@ -164,11 +234,46 @@ paths:
       description: |
         Check a member in into a given space
       operationId: checkIn
+      security:
+        - OAuth2:
+          - checkins
       parameters:
         - name: body
           in: body
           schema:
             $ref: '#/definitions/checkin_requests'
+
+      responses:
+        200:
+          description: Success
+          schema: # response schema can be specified for each response
+            $ref: '#/definitions/checkins'
+          examples:
+          # repsonse samples for each type operation produces
+            application/vnd.api+json:
+              data:
+                id: a8c12f62ac8df98d29de357180d673e1
+                type: checkins
+                attributes:
+                  start: 2018-12-06T10:00:00Z
+                relationships:
+                  memberhip:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: memberships
+                  space:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: spaces
+                  time_pass:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: time_passes
+        403:
+          description: Forbidden
+        404:
+          description: Membership not found
+
 
 
 
@@ -241,73 +346,6 @@ paths:
           description: Forbidden
         404:
           description: Membership not found
-    # documentation for PUT operation for this path
-    put:
-      tags:
-        - User
-      summary: Updated user
-      description: This can only be done by the logged in user.
-      operationId: updateUser
-      produces:
-        - application/json
-      parameters:
-        - name: username
-          in: path
-          description: The name that needs to be updated
-          required: true
-          type: string
-        - in: body
-          name: body
-          description: Updated user object
-          required: true
-          # for body parameter you should specify request schema instead of type
-          schema:
-            $ref: '#/definitions/User'
-      security:
-        - main_auth:
-          - 'write:users'
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Invalid user supplied
-        '404':
-          description: User not found
-
-  '/echo':
-    post:
-      tags:
-        - Echo
-      summary: Echo test
-      description: Receive the exact message you've sent
-      operationId: echo
-      parameters:
-        - name: message
-          in: body
-          description: 'Echo payload'
-          required: true
-          schema:
-            type: string
-            example: 'Hello world!'
-      security:
-        - api_key: []
-      responses:
-        '200':
-          description: 'OK'
-          examples:
-            'application/json': 'Hello world!'
-          schema:
-            type: string
-          # docuemnt headers for this repsonse
-          headers:
-            X-Rate-Limit: # Header name
-              type: integer # Header value type
-              format: int32 # Header value format
-              description: calls per hour allowed by the user
-            X-Expires-After:
-              type: string
-              format: date-time
-              description: date in UTC when token expires
 # An object to hold data types that can be consumed and produced by operations.
 # These data types can be primitives, arrays or models.
 definitions:
@@ -321,7 +359,8 @@ definitions:
     properties:
       type:
         type: 'string'
-        pattern: "checkin_request"
+        pattern: "checkin_requests"
+        example: checkin_requests
       attributes:
         type: object
         additionalProperties: false
@@ -342,7 +381,6 @@ definitions:
           start:
             type: string
             format: date-time
-            required: false
             description: the checkin start time - possible to check a user in in the past (optional)
       relationships:
         type: object
@@ -379,30 +417,3 @@ definitions:
           stop:
             type: string
             format: date-time
-
-
-  Email:
-    description: User email address
-    type: string
-    format: email
-    example: john.smith@example.com
-  User:
-    type: object
-    properties:
-      username:
-        description: User supplied username
-        type: string
-        minLength: 4
-        example: John78
-      firstName:
-        description: User first name
-        type: string
-        minLength: 1
-        example: John
-      lastName:
-        description: User last name
-        type: string
-        minLength: 1
-        example: Smith
-      email:
-        $ref: '#/definitions/Email'
