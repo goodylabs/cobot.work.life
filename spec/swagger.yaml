@@ -47,28 +47,12 @@ externalDocs:
   description: Find out how to create Github repo for your OpenAPI spec.
   url: 'https://github.com/Rebilly/generator-openapi-repo'
 produces:
-  # List of mime types your API endpoins can return.
-  # This is a global default. You can OVERWRITE it in each specific operation.
-  # Remove the ones not used in your API
   - application/vnd.api+json
 consumes:
-  # List of mime types your API endpoins consumes.
-  # This is a global default. You can OVERWRITE it in each specific operation.
-  # Remove the ones not supported by your API
   - application/json
-  - application/xml
-  # you can add any mime type your API consumes to the list
-
-# A list of tags used by the specification with additional metadata.
-# The order of the tags can be used to reflect on their order by the parsing tools.
 tags:
   - name: Check Ins
     description: Checkin Operations
-  - name: Echo
-    description: Example echo operations
-  - name: User
-    description: Operations about user
-# Security scheme definitions that can be used across the specification.
 securityDefinitions:
   main_auth: # security definition name (you can name it as you want)
     type: oauth2 # authorization type, one of: oauth2, basic, apiKey
@@ -98,18 +82,112 @@ securityDefinitions:
 # basePath in order to construct the full URL.
 paths:
 
+  '/check_ins':
+    post:
+      tags:
+        - Check Ins
+      summary: Check In with credentials
+      description: |
+        checkin with a check in token or login / password
+      parameters:
+
+    get:
+      tags:
+        - Check Ins
+
+
+  '/memberships/{membershipId}/check_ins/current':
+    parameters:
+      - name: mebershipId
+        in: path
+        description: 'The id of the membership the checkins belong to.'
+        required: true
+        type: string
+      - name: stop
+        in: query
+        type: string
+        format: date-time
+        description: 'Optional end time - possible to check a member out in the past'
+    delete:
+      tags:
+        - Check Ins
+      summary: Check out a member
+      operationId: checkOut
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: '#/definitions/checkins'
+          examples:
+            application/vnd.api+json:
+              data:
+                id: a8c12f62ac8df98d29de357180d673e1
+                type: checkins
+                attributes:
+                  start: 2018-12-06T10:00:00Z
+                  stop: 2018-12-06T11:00:00Z
+                relationships:
+                  memberhip:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: memberships
+                  space:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: spaces
+                  time_pass:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: time_passes
+
+        403:
+          description: Forbidden
+        404:
+          descripton: Member not found
+
 
 
   '/memberships/{membershipId}/check_ins':
-    # documentation for GET operation for this path
+
+    parameters:
+      - name: mebershipId
+        in: path
+        description: 'The id of the membership the checkins belong to.'
+        required: true
+        type: string
 
     # parameters list that are used with each operation for this path
+    post:
+      tags:
+        - Check Ins
+      summary: Check In a member
+      descripition: |
+        Check a member in into a given space
+      operationId: checkIn
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/checkin_requests'
+          examples:
+              data:
+                attributes:
+                  token: 'optional RFID TOKEN'
+                  login: 'optional login'
+                  password: 'optional password'
+                  start: 2018-12-07T12:09:51Z
+
+
+
+
+
+
     get:
       tags:
         - Check Ins
 
       # summary is up to 120 symbold but we recommend to be shortest as possible
-      summary: Get user check-ins
+      summary: Get member check-ins
 
       description: |
         Get user check-ins in the given time range, across the network (if space is part of one)
@@ -131,13 +209,8 @@ paths:
           in: query # place where paramter is passed: path, header, query or body, formData
           description: To date
           # type of the paramter: string, number, integer, boolean, array
-          type: string      
-          format: date-time
-        - name: mebershipId
-          in: path
-          description: 'The id of the membership the checkins belong to.'
-          required: true
           type: string
+          format: date-time
 
       # security schemas applied to this operation
       security:
@@ -154,17 +227,25 @@ paths:
           examples:
           # repsonse samples for each type operation produces
             application/vnd.api+json:
-              value:
-                data:
-                  - id: a8c12f62ac8df98d29de357180d673e1
-                    type: checkins
-                    attributes:
-                      start: 2018-12-06T10:00:00Z
-                      stop: 2018-12-06T11:00:00Z
-                    relationships:
-                      memberhip:
+              data:
+                - id: a8c12f62ac8df98d29de357180d673e1
+                  type: checkins
+                  attributes:
+                    start: 2018-12-06T10:00:00Z
+                    stop: 2018-12-06T11:00:00Z
+                  relationships:
+                    memberhip:
+                      data:
                         id: c9a99a71ac8df98d29de357180d273d3
                         type: memberships
+                    space:
+                      data:
+                        id: c9a99a71ac8df98d29de357180d273d3
+                        type: spaces
+                    time_pass:
+                      data:
+                        id: c9a99a71ac8df98d29de357180d273d3
+                        type: time_passes
         403:
           description: Forbidden
         404:
@@ -239,6 +320,45 @@ paths:
 # An object to hold data types that can be consumed and produced by operations.
 # These data types can be primitives, arrays or models.
 definitions:
+  checkin_requests:
+    type: object
+    additionalProperties: false
+    required:
+      - type
+      - attributes
+      - relationships
+    properties:
+      type:
+        type: 'string'
+        pattern: "checkin_request"
+      attributes:
+        type: object
+        additionalProperties: false
+        properties:
+          token:
+            type: string
+            example: Optional RFID token
+            description: used if membershipId is not present (optional)
+          start:
+            type: string
+            format: date-time
+            required: false
+            description: the checkin start time - possible to check a user in in the past (optional)
+      relationships:
+        type: object
+        sdditionalProperties: false
+        properties:
+          space:
+            type: object
+            description: the space to check the user in to
+            properties:
+              data:
+                type: object
+                example:
+                  type: spaces
+                  id: 123
+
+
   checkins:
     type: object
     required:
