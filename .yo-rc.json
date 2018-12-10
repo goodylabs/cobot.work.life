@@ -1,0 +1,10 @@
+{
+  "generator-openapi-repo": {
+    "importExistingSpec": false,
+    "name": "go.cobot",
+    "repo": "goodylabs/cobot.work.life",
+    "splitSpec": false,
+    "samples": true,
+    "installSwaggerUI": true
+  }
+}

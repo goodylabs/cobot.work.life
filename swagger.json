@@ -1,0 +1,531 @@
+{
+  "swagger": "2.0",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "host": "example.com",
+  "basePath": "/api/v1",
+  "info": {
+    "description": "This is an **example** API to demontstrate features of OpenAPI specification\n# Introduction\nThis specification is intended to to be a good starting point for describint your API in\n[OpenAPI/Swagger format](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md).\nIt also demonstrates features of [generator-openapi-repo](https://github.com/Rebilly/generator-openapi-repo) tool and\n[ReDoc](https://github.com/Rebilly/ReDoc) documentation engine. So beyond the standard OpenAPI syntax we use a few\n[vendor extensions](https://github.com/Rebilly/ReDoc/blob/master/docs/redoc-vendor-extensions.md).\n\n# OpenAPI Specification\nThe goal of The OpenAPI Specification is to define a standard, language-agnostic interface to REST APIs which\nallows both humans and computers to discover and understand the capabilities of the service without access to source\ncode, documentation, or through network traffic inspection. When properly defined via OpenAPI, a consumer can\nunderstand and interact with the remote service with a minimal amount of implementation logic. Similar to what\ninterfaces have done for lower-level programming, OpenAPI removes the guesswork in calling the service.\n",
+    "version": "1.0.0",
+    "title": "Example.com",
+    "termsOfService": "https://example.com/terms/",
+    "contact": {
+      "email": "contact@example.com",
+      "url": "http://example.com/contact"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "x-logo": {
+      "url": "https://apis.guru/openapi-template/logo.png"
+    }
+  },
+  "externalDocs": {
+    "description": "Find out how to create Github repo for your OpenAPI spec.",
+    "url": "https://github.com/Rebilly/generator-openapi-repo"
+  },
+  "produces": [
+    "application/vnd.api+json"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "tags": [
+    {
+      "name": "Check Ins",
+      "description": "Checkin Operations"
+    }
+  ],
+  "securityDefinitions": {
+    "OAuth2": {
+      "type": "oauth2",
+      "authorizationUrl": "http://example.com/api/oauth/dialog",
+      "flow": "implicit",
+      "scopes": {
+        "read_checkins": "read checkin for a membership",
+        "checkins": "perform chckins"
+      }
+    }
+  },
+  "paths": {
+    "/spaces/{spaceId}/check_ins": {
+      "post": {
+        "tags": [
+          "Check Ins"
+        ],
+        "summary": "Check In/Out with token",
+        "description": "Checks in/out with a check in token. It's up to the server to determine whether the call is to do a checkin or a checkout\n",
+        "operationId": "checkInWithCreds",
+        "security": [
+          {
+            "OAuth2": [
+              "checkins"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-CheckInToken",
+            "in": "header",
+            "type": "string",
+            "format": "slug",
+            "example": "$DFT43thj"
+          },
+          {
+            "name": "spaceId",
+            "in": "path",
+            "type": "string",
+            "format": "oid",
+            "example": "c9a99a71ac8df98d29de357180d273d3"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/checkins"
+            },
+            "examples": {
+              "application/vnd.api+json": {
+                "data": {
+                  "id": "a8c12f62ac8df98d29de357180d673e1",
+                  "type": "checkins",
+                  "attributes": {
+                    "start": "2018-12-06T10:00:00.000Z"
+                  },
+                  "relationships": {
+                    "memberhip": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "memberships"
+                      }
+                    },
+                    "space": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "spaces"
+                      }
+                    },
+                    "time_pass": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "time_passes"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/spaces/{spaceId}/check_ins/{checkinId}": {
+      "get": {
+        "tags": [
+          "Check Ins"
+        ],
+        "summary": "Get check-in details",
+        "operationId": "getCheckIn",
+        "security": [
+          {
+            "OAuth2": [
+              "checkins"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "spaceId",
+            "in": "path",
+            "type": "string",
+            "format": "oid",
+            "example": "c9a99a71ac8df98d29de357180d273d3"
+          },
+          {
+            "name": "checkinId",
+            "in": "path",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/checkins"
+            },
+            "examples": {
+              "application/vnd.api+json": {
+                "data": {
+                  "id": "a8c12f62ac8df98d29de357180d673e1",
+                  "type": "checkins",
+                  "attributes": {
+                    "start": "2018-12-06T10:00:00.000Z",
+                    "stop": "2018-12-06T11:00:00.000Z"
+                  },
+                  "relationships": {
+                    "memberhip": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "memberships"
+                      }
+                    },
+                    "space": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "spaces"
+                      }
+                    },
+                    "time_pass": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "time_passes"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/memberships/{membershipId}/check_ins": {
+      "parameters": [
+        {
+          "name": "membershipId",
+          "in": "path",
+          "description": "The id of the membership the checkins belong to.",
+          "required": true,
+          "type": "string"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Check Ins"
+        ],
+        "summary": "Check In a member",
+        "description": "Check a member in into a given space\n",
+        "operationId": "checkIn",
+        "security": [
+          {
+            "OAuth2": [
+              "checkins"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/checkin_requests"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/checkins"
+            },
+            "examples": {
+              "application/vnd.api+json": {
+                "data": {
+                  "id": "a8c12f62ac8df98d29de357180d673e1",
+                  "type": "checkins",
+                  "attributes": {
+                    "start": "2018-12-06T10:00:00.000Z"
+                  },
+                  "relationships": {
+                    "memberhip": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "memberships"
+                      }
+                    },
+                    "space": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "spaces"
+                      }
+                    },
+                    "time_pass": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "time_passes"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Membership not found"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Check Ins"
+        ],
+        "summary": "Get member check-ins",
+        "description": "Get user check-ins in the given time range, across the network (if space is part of one)\n",
+        "operationId": "getUserCheckIn",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "description": "From date",
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "To date",
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "security": [
+          {
+            "OAuth2": [
+              "read_checkins"
+            ]
+          }
+        ],
+        "produces": [
+          "application/vnd.api+json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/checkins"
+            },
+            "examples": {
+              "application/vnd.api+json": {
+                "data": [
+                  {
+                    "id": "a8c12f62ac8df98d29de357180d673e1",
+                    "type": "checkins",
+                    "attributes": {
+                      "start": "2018-12-06T10:00:00.000Z",
+                      "stop": "2018-12-06T11:00:00.000Z"
+                    },
+                    "relationships": {
+                      "memberhip": {
+                        "data": {
+                          "id": "c9a99a71ac8df98d29de357180d273d3",
+                          "type": "memberships"
+                        }
+                      },
+                      "space": {
+                        "data": {
+                          "id": "c9a99a71ac8df98d29de357180d273d3",
+                          "type": "spaces"
+                        }
+                      },
+                      "time_pass": {
+                        "data": {
+                          "id": "c9a99a71ac8df98d29de357180d273d3",
+                          "type": "time_passes"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Membership not found"
+          }
+        }
+      }
+    },
+    "/memberships/{membershipId}/check_ins/{checkInId}": {
+      "put": {
+        "tags": [
+          "Check Ins"
+        ],
+        "summary": "Check Out a member",
+        "description": "Update a checkin (check out a member)\n",
+        "operationId": "checkIn",
+        "security": [
+          {
+            "OAuth2": [
+              "checkins"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "checkInId",
+            "in": "path",
+            "type": "string",
+            "format": "oid"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/checkin_requests"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/checkins"
+            },
+            "examples": {
+              "application/vnd.api+json": {
+                "data": {
+                  "id": "a8c12f62ac8df98d29de357180d673e1",
+                  "type": "checkins",
+                  "attributes": {
+                    "start": "2018-12-06T10:00:00.000Z",
+                    "stop": "2018-12-06T11:00:00.000Z"
+                  },
+                  "relationships": {
+                    "memberhip": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "memberships"
+                      }
+                    },
+                    "space": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "spaces"
+                      }
+                    },
+                    "time_pass": {
+                      "data": {
+                        "id": "c9a99a71ac8df98d29de357180d273d3",
+                        "type": "time_passes"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Membership not found"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "checkin_requests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "attributes",
+        "relationships"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "pattern": "checkin_requests",
+          "example": "checkin_requests"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": {
+              "type": "string",
+              "format": "date-time",
+              "description": "the checkin start time - possible to check a user in in the past (optional)"
+            },
+            "stop": {
+              "type": "string",
+              "format": "date-time",
+              "description": "the check out time (optional)"
+            }
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "space": {
+              "type": "object",
+              "description": "the space to check the user in to",
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "example": {
+                    "type": "spaces",
+                    "id": 123
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "checkins": {
+      "type": "object",
+      "required": [
+        "type",
+        "attributes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "pattern": "checkins"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "stop": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    }
+  }
+}
