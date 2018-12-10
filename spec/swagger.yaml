@@ -68,24 +68,30 @@ securityDefinitions:
 # basePath in order to construct the full URL.
 paths:
 
-  '/check_ins/':
+  '/spaces/{spaceId}/check_ins':
     post:
       tags:
         - Check Ins
-      summary: Check In with credentials
+      summary: Check In/Out with token
       description: |
-        checkin with a check in token or login / password
+        Checks in/out with a check in token. It's up to the server to determine whether the call is to do a checkin or a checkout
       operationId: checkInWithCreds
       security:
         - OAuth2:
           - checkins
       parameters:
-        - name: body
-          in: body
-          schema:
-            $ref: '#/definitions/checkin_requests'
+        - name: X-CheckInToken
+          in: header
+          type: string
+          format: slug
+          example: $DFT43thj
+        - name: spaceId
+          in: path
+          type: string
+          format: oid
+          example: c9a99a71ac8df98d29de357180d273d3
       responses:
-        200:
+        201:
           description: Success
           schema:
             $ref: '#/definitions/checkins'
@@ -96,7 +102,6 @@ paths:
                 type: checkins
                 attributes:
                   start: 2018-12-06T10:00:00Z
-                  stop: 2018-12-06T11:00:00Z
                 relationships:
                   memberhip:
                     data:
@@ -115,7 +120,7 @@ paths:
           description: Forbidden
         404:
           description: Not found
-  '/check_ins/{checkinId}':
+  '/spaces/{spaceId}/check_ins/{checkinId}':
     get:
       tags:
         - Check Ins
@@ -125,6 +130,11 @@ paths:
         - OAuth2:
           - checkins
       parameters:
+        - name: spaceId
+          in: path
+          type: string
+          format: oid
+          example: c9a99a71ac8df98d29de357180d273d3
         - name: checkinId
           in: path
           type: string
@@ -162,61 +172,6 @@ paths:
           description: Not found
 
 
-
-  '/memberships/{membershipId}/check_ins/current':
-    parameters:
-      - name: membershipId
-        in: path
-        description: 'The id of the membership the checkins belong to.'
-        required: true
-        type: string
-      - name: stop
-        in: query
-        type: string
-        format: date-time
-        description: 'Optional end time - possible to check a member out in the past'
-    delete:
-      tags:
-        - Check Ins
-      summary: Check out a member
-      operationId: checkOut
-      security:
-        - OAuth2:
-          - read_checkins
-      responses:
-        200:
-          description: Success
-          schema:
-            $ref: '#/definitions/checkins'
-          examples:
-            application/vnd.api+json:
-              data:
-                id: a8c12f62ac8df98d29de357180d673e1
-                type: checkins
-                attributes:
-                  start: 2018-12-06T10:00:00Z
-                  stop: 2018-12-06T11:00:00Z
-                relationships:
-                  memberhip:
-                    data:
-                      id: c9a99a71ac8df98d29de357180d273d3
-                      type: memberships
-                  space:
-                    data:
-                      id: c9a99a71ac8df98d29de357180d273d3
-                      type: spaces
-                  time_pass:
-                    data:
-                      id: c9a99a71ac8df98d29de357180d273d3
-                      type: time_passes
-
-        403:
-          description: Forbidden
-        404:
-          description: Member not found
-
-
-
   '/memberships/{membershipId}/check_ins':
 
     parameters:
@@ -225,8 +180,6 @@ paths:
         description: 'The id of the membership the checkins belong to.'
         required: true
         type: string
-
-    # parameters list that are used with each operation for this path
     post:
       tags:
         - Check Ins
@@ -273,11 +226,6 @@ paths:
           description: Forbidden
         404:
           description: Membership not found
-
-
-
-
-
     get:
       tags:
         - Check Ins
@@ -346,6 +294,61 @@ paths:
           description: Forbidden
         404:
           description: Membership not found
+
+  '/memberships/{membershipId}/check_ins/{checkInId}':
+    put:
+      tags:
+        - Check Ins
+      summary: Check Out a member
+      description: |
+        Update a checkin (check out a member)
+      operationId: checkIn
+      security:
+        - OAuth2:
+          - checkins
+      parameters:
+        - name: checkInId
+          in: path
+          type: string
+          format: oid
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/checkin_requests'
+
+      responses:
+        200:
+          description: Success
+          schema: # response schema can be specified for each response
+            $ref: '#/definitions/checkins'
+          examples:
+          # repsonse samples for each type operation produces
+            application/vnd.api+json:
+              data:
+                id: a8c12f62ac8df98d29de357180d673e1
+                type: checkins
+                attributes:
+                  start: 2018-12-06T10:00:00Z
+                  stop: 2018-12-06T11:00:00Z
+                relationships:
+                  memberhip:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: memberships
+                  space:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: spaces
+                  time_pass:
+                    data:
+                      id: c9a99a71ac8df98d29de357180d273d3
+                      type: time_passes
+        403:
+          description: Forbidden
+        404:
+          description: Membership not found
+
+          
 # An object to hold data types that can be consumed and produced by operations.
 # These data types can be primitives, arrays or models.
 definitions:
@@ -365,23 +368,14 @@ definitions:
         type: object
         additionalProperties: false
         properties:
-          token:
-            type: string
-            example: Optional RFID token
-            description: used if membershipId is not present (optional)
-          login:
-            type: string
-            example: Optional login
-            description: used if membershipId is not present (optional)
-          password:
-            type: string
-            example: Optional password
-            description: used if membershipId is not present (optional)
-
           start:
             type: string
             format: date-time
             description: the checkin start time - possible to check a user in in the past (optional)
+          stop:
+            type: string
+            format: date-time
+            description: the check out time (optional)
       relationships:
         type: object
         additionalProperties: false
